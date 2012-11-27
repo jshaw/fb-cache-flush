@@ -29,11 +29,10 @@ class FlushFacebookCache:
 
     def tag_uri_and_name(self, elem):
         if elem.tag[0] == '{':
-            uri, ignore, tag = elem.tag[1:].partition('}')
+            uri = elem.tag[1:].split('}', 1)[0]
         else:
             uri = None
-            tag = elem.tag
-        return uri, tag
+        return uri
 
     def get_files(self):
         # Loops through all XML files in specified directory
@@ -45,25 +44,24 @@ class FlushFacebookCache:
         self.get_site_urls()
 
     def make_request(self):
-        count = 0
-        while (count < len(self.all_pages)):
+
+        for page in self.all_pages:
             # If you want to add a timeout while requesting the debugger
             if(self.use_timer):
                 time.sleep(1.0)
 
             # Full URL request including FB debugger and params
-            full_url = self.fb_url + '?q=' + self.all_pages[count]
-            print full_url
+            full_url = self.fb_url + '?q=' + page
             r = requests.get(full_url, headers=self.headers)
 
             # Use if payload is in an object & param order doesn't matter
             # Comment out above request and uncomment the line below
             # r = requests.get(full_url, params=self.all_pages[count])
 
+            # For logging
             print r.status_code
             print r.url
             print '-----------------'
-            count += 1
 
     def get_site_urls(self):
 
@@ -73,41 +71,47 @@ class FlushFacebookCache:
             root = tree.getroot()
 
             # Gets the XML namespace from the file
-            uri, tag = self.tag_uri_and_name(root)
+            uri = self.tag_uri_and_name(root)
 
             if (uri):
                 uri = '{' + uri + '}'
-                url_namespace = uri + 'url'
                 loc_namespace = uri + 'loc'
             else:
-                url_namespace = 'url'
                 loc_namespace = 'loc'
 
             # Gets all of the URLs in each sitemap xml file
-            for url in root.findall(url_namespace):
-                for loc in url.findall(loc_namespace):
-                    url = loc.text
+            for url in root.findall('*/' + loc_namespace):
 
-                    if(self.include_url_parameters):
-                        paramaters = urllib.urlencode([('utm_source', 'source_name'), ('utm_medium', 'medium_name'), ('utm_campaign', 'campaign_name')])
-                        payload = url + '?' + urllib.quote(paramaters, '')
+                url = url.text
 
-                        # This sorts the fields alphabetically, so not good for generating custom URLS for submitting to Facebook
-                        # Uncomment parameters and other payload below and comment the previous 2 lines if you want to use the object params
-                        # paramaters = {
-                        #     'utm_source': 'source_name',
-                        #     'utm_medium': 'medium_name',
-                        #     'utm_campaign': 'campaign_name'
-                        # }
-                        # Use for an object payload not array
-                        # payload = url + "?" + urllib.quote(urllib.urlencode(paramaters), '')
+                if(self.include_url_parameters):
+                    # Formating the urlencode this way so there is control over the order the params are added to the url.
+                    # Facebook caches use *EXACT* urls so if the paramaters are passed out of order from the url that Facebook is using to cache the page, the FB cache will not be flushed
+                    paramaters = urllib.urlencode([('utm_source', 'source_name'), ('utm_medium', 'medium_name'), ('utm_campaign', 'campaign_name')])
+                    payload = url + '?' + urllib.quote(paramaters, '')
 
-                    else:
-                        payload = url
+                    # This sorts the fields alphabetically, so not good for generating custom URLS for submitting to Facebook
+                    # Uncomment parameters and other payload below and comment the previous 2 lines if you want to use the object params
+                    # paramaters = {
+                    #     'utm_source': 'source_name',
+                    #     'utm_medium': 'medium_name',
+                    #     'utm_campaign': 'campaign_name'
+                    # }
+                    # Use for an object payload not array
+                    # payload = url + "?" + urllib.quote(urllib.urlencode(paramaters), '')
 
-                    self.all_pages.append(payload)
+                else:
+                    payload = url
+
+                self.all_pages.append(payload)
 
         self.make_request()
 
-flush_cache = FlushFacebookCache()
-flush_cache.get_files()
+
+def main():
+    flush_cache = FlushFacebookCache()
+    flush_cache.get_files()
+
+
+if __name__ == '__main__':
+    main()

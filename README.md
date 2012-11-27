@@ -12,3 +12,11 @@ This is best used for sites with a large URL tree and possibly unique URLs per l
 
 At the moment you need to generate the sitemaps manually.
 The sitemaps are generated using http://www.xml-sitemaps.com.
+
+
+Updates
+---------------
+Added internal python variable _name_.
+Cleaned up some repetitive while loops and moved to fors
+Switched to using xpath findall compared to looping through the xml tree structure to get to the site urls
+Switched from partition to split to grab the urls. Cleaned up unused vars in tag_uri_and_name
