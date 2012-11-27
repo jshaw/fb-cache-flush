@@ -16,7 +16,7 @@ The sitemaps are generated using http://www.xml-sitemaps.com.
 
 Updates
 ---------------
-Added internal python variable _name_.
-Cleaned up some repetitive while loops and moved to fors
-Switched to using xpath findall compared to looping through the xml tree structure to get to the site urls
-Switched from partition to split to grab the urls. Cleaned up unused vars in tag_uri_and_name
+* Added internal python variable _name_.
+* Cleaned up some repetitive while loops and moved to fors
+* Switched to using xpath findall compared to looping through the xml tree structure to get to the site urls
+* Switched from partition to split to grab the urls. Cleaned up unused vars in tag_uri_and_name
